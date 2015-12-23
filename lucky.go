@@ -3,13 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"io"
+	"math/rand"
 	"mime"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -64,21 +67,33 @@ type WebHandler struct {
 	config Config
 }
 
+func (hdl WebHandler) HandleAjaxRequest(w http.ResponseWriter) {
+	time.Sleep(3 * time.Second)
+	rand.Seed(time.Now().UnixNano())
+	num := rand.Intn(42) + 1 // 1 ... 42
+	fmt.Fprintf(w, "Your lucky number is: %d", num)
+}
+
 func (hdl WebHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if hdl.config.Debug {
 		dump, _ := httputil.DumpRequest(req, true)
-		fmt.Println(string(dump))
+		log.Println(string(dump))
 	}
 
 	path := req.URL.Path[1:]
 	if path == "" {
 		path = "start.html"
 	}
+	if path == "getnumber" {
+		hdl.HandleAjaxRequest(w)
+		return
+	}
+
 	file, err := os.Open(hdl.config.ServerRoot + path)
 	if err != nil {
-
 		w.WriteHeader(404)
 		io.WriteString(w, "Page not found")
+		return
 	}
 	defer file.Close()
 	rdr := bufio.NewReader(file)
