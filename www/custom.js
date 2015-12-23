@@ -12,6 +12,10 @@ function process() {
 			console.log("Ajax ready.");
 			document.getElementById("changeme").innerHTML = xhr.responseText;
 		}
+
+		if (xhr.readyState == 4 && xhr.status != 200) {
+			document.getElementById("changeme").innerHTML = "No lucky number available right now. Please try again later.";
+		}
 	};
 	xhr.send();
 	document.getElementById("changeme").innerHTML = "loading...";
